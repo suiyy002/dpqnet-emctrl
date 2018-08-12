@@ -1,0 +1,10 @@
+file (RELATIVE_PATH _pwd "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_LIST_DIR}")
+include_directories(${_pwd} ${_pwd}/device ${_pwd}/protocol)
+aux_source_directory(${_pwd}/device DEV_SRC)
+
+add_sources(serial_handle.cpp socket_base.cpp socket_client.cpp commu_disptchr.cpp)
+
+add_sources(protocol/phy_prtcl_pqb.cpp protocol/app_prtcl_guic.cpp 
+			protocol/app_prtcl_gui.cpp)
+set ( SRC_LIST ${SRC_LIST} ${DEV_SRC} )
+#unset(_pwd)

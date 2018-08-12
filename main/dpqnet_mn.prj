@@ -1,0 +1,72 @@
+[Project ID]
+Signature=UE Proj: v.1
+[Project Information]
+Use Relative Directory=1
+Relative to Project File=1
+Include Sub Directories=1
+Project Tagfile=U:\emctrl\main\tags.lst
+Project Wordfile=
+Filter=
+Create Tagfile=0
+Project TpFile=
+[Files]
+0=License.txt
+1=CMakeLists.txt
+2=config.h.in
+3=.\src\
+4=.\0.doc\
+[Group Filter]
+.\x86\=Makefile
+[Group]
+0=build
+1=common
+2=common - commu
+3=common - commu - protocol
+4=common - data
+[Files - build]
+0=build\my_cmake
+1=build\toolchain-larm.cmake
+2=build\toolchain-lx86.cmake
+3=build\toolchain-wx64.cmake
+4=build\toolchain-wx86.cmake
+[Files - common]
+0=..\common\0.doc\
+1=..\common\config\
+2=..\common\misc\
+3=..\common\thread\
+4=..\common\time\
+[Files - common - commu]
+0=..\common\commu\CMakeLists_s.txt
+1=..\common\commu\commu_disptchr.cpp
+2=..\common\commu\commu_disptchr.h
+3=..\common\commu\serial_handle.cpp
+4=..\common\commu\serial_handle.h
+5=..\common\commu\socket_base.cpp
+6=..\common\commu\socket_base.h
+7=..\common\commu\socket_server.cpp
+8=..\common\commu\socket_server.h
+9=..\common\commu\device\
+[Files - common - commu - protocol]
+0=..\common\commu\protocol\app_prtcl.h
+1=..\common\commu\protocol\app_prtcl_gps.cpp
+2=..\common\commu\protocol\app_prtcl_gps.h
+3=..\common\commu\protocol\app_prtcl_gui.cpp
+4=..\common\commu\protocol\app_prtcl_gui.h
+5=..\common\commu\protocol\app_prtcl_guis.cpp
+6=..\common\commu\protocol\app_prtcl_guis.h
+7=..\common\commu\protocol\app_prtcl_pq.cpp
+8=..\common\commu\protocol\app_prtcl_pq.h
+9=..\common\commu\protocol\app_prtcl_pqb.cpp
+10=..\common\commu\protocol\app_prtcl_pqb.h
+11=..\common\commu\protocol\phy_prtcl.h
+12=..\common\commu\protocol\phy_prtcl_gps.h
+13=..\common\commu\protocol\phy_prtcl_pqb.cpp
+14=..\common\commu\protocol\phy_prtcl_pqb.h
+15=..\common\commu\protocol\prtcl_interface.h
+[Files - common - data]
+0=..\common\data\pqm_data_types.h
+1=..\common\data\messageq_guis.h
+2=..\common\data\messageq_guis.cpp
+3=..\common\data\message_queue.h
+4=..\common\data\message_queue.cpp
+5=..\common\data\data_statis.h

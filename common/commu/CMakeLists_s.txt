@@ -1,0 +1,6 @@
+aux_source_directory(./ COMMU_SRC)
+add_sources(protocol/phy_prtcl_pqb.cpp protocol/app_prtcl_guic.cpp protocol/app_prtcl_gui.cpp)
+set ( SRCS ${SRCS} ${COMMU_SRC} )
+
+#message("PARENT_DIRECTORY: ${_relPath}")
+#message("~~~test~~~: ${PROJECT_SOURCE_DIR} ${PROJECT_NAME} ${CMAKE_SOURCE_DIR}")

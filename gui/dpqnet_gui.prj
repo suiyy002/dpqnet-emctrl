@@ -1,0 +1,70 @@
+[Project ID]
+Signature=UE Proj: v.1
+[Project Information]
+Use Relative Directory=1
+Relative to Project File=1
+Include Sub Directories=1
+Project Tagfile=U:\emctrl\gui\tags.lst
+Project Wordfile=
+Filter=
+Create Tagfile=0
+Project TpFile=
+Filter Dot Files=1
+[Files]
+0=.\src\
+1=License.txt
+2=CMakeLists.txt
+3=config.h.in
+4=.\0.doc\
+[Group Filter]
+.\x86\=Makefile
+[Group]
+0=build
+1=common
+2=common - commu
+3=common - commu - protocol
+4=common - commu - device
+5=common - commu - 0.doc
+6=common - data
+[Files - build]
+0=build\my_cmake
+1=build\toolchain-larm.cmake
+2=build\toolchain-lx86.cmake
+3=build\toolchain-wx64.cmake
+4=build\toolchain-wx86.cmake
+[Files - common]
+0=..\common\time\
+1=..\common\thread\
+2=..\common\misc\
+3=..\common\0.doc\
+4=..\common\config\
+[Files - common - commu - protocol]
+0=..\common\commu\protocol\app_prtcl.h
+1=..\common\commu\protocol\app_prtcl_gui.cpp
+2=..\common\commu\protocol\app_prtcl_gui.h
+3=..\common\commu\protocol\app_prtcl_guic.cpp
+4=..\common\commu\protocol\app_prtcl_guic.h
+5=..\common\commu\protocol\phy_prtcl.h
+6=..\common\commu\protocol\phy_prtcl_pqb.cpp
+7=..\common\commu\protocol\phy_prtcl_pqb.h
+8=..\common\commu\protocol\prtcl_interface.h
+[Files - common - commu]
+0=..\common\commu\CMakeLists_c.txt
+1=..\common\commu\commu_disptchr.cpp
+2=..\common\commu\commu_disptchr.h
+3=..\common\commu\socket_base.cpp
+4=..\common\commu\socket_base.h
+5=..\common\commu\socket_client.cpp
+6=..\common\commu\socket_client.h
+[Files - common - commu - device]
+0=..\common\commu\device\commu_device.h
+1=..\common\commu\device\socket_device.cpp
+2=..\common\commu\device\socket_device.h
+[Files - common - commu - 0.doc]
+0=..\common\commu\0.doc\Communication class diagram.svg
+[Files - common - data]
+0=..\common\data\pqm_data_types.h
+1=..\common\data\messageq_guic.h
+2=..\common\data\messageq_guic.cpp
+3=..\common\data\message_queue.cpp
+4=..\common\data\message_queue.h

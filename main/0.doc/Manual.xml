@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Programer manual of DPQNet300 mctrl -->
+<manual>
+	<command_option>
+		pars_optini.h
+	</command_option>
+	<rce desc="rapid change event">
+		rate change event is only a supplement of rce
+	</rce>
+    <ComTraDE>
+        <Overview>
+	    	Save file location：/boyuu/save/data_sav/COMTRADE
+            一分钟保存为一个文件。利用sftp上传
+            标准结构: (6*2+2*4)*2048*5*60=12,288,000(2048/10cycle); 24,576,000(4096/10cycle)
+            简化结构: 6*2*2048*5*60=7,372,800(2048/10cycle); 14,745,600(4096/10cycle)
+            <!--采用单文件存储格式,配置和数据放在一个文件中。
+            文件名：YYMMDDThhmmss_xms.CFF, e.g. 130624T150100_257.CFF -->
+            采用多文件存储格式,只保存配置和数据文件。
+            文件名：YYMMDDThhmmss_xms, e.g. 130624T150100_020.dat 
+            								130624T150100_020.cfg
+            文件名：iedname_ldname_xxx_YYMMDD_hhmmss_xms
+            		xxx:Fault number, equal to xx of transientvxx.sa.
+            		e.g. PQMonitor_PQM1_000_20160307_144721_735.cfg 
+            			 PQMonitor_PQM1_000_20160307_144721_735.dat 
+        </Overview>
+        <cfg_file_format>
+            YYMMDDThhmmss_xxxx 以下配置对应的文件名称
+            station_name,rec_dev_id,rev_year
+                e.g. ,,2001
+            TT,##A,##D
+                e.g. 6,6A,
+            An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
+                ch_id 有效取值：U(电压通道)，I(电流通道)
+                ph 取值：AN/BN/CN AB/BC/CA
+                ccbm: A1 -- 触发原因("VVar", "Man", "IStr", "ILmt", "VLmt", "Stdy")
+                	  A2 -- 事件类型("---", "Intr", "Dip", "Swell")
+                e.g. 1,U,AN,VVar,V,0.01,0,,-32000,32000,10000,100,S
+                	 2,U,BN,Swell,V,0.01,0,,-32000,32000,10000,100,S
+                	 3,U,CN,,V,0.01,0,,-32000,32000,10000,100,S
+                	 4,I,AN,,V,0.01,0,,-32000,32000,600,5,S
+                	 5,I,BN,,V,0.01,0,,-32000,32000,600,5,S
+                	 6,I,CN,,V,0.01,0,,-32000,32000,600,5,S
+            lf  e.g. 50
+            nrates
+            samp,endsamp（行数等于ntates）
+                e.g. 1
+                     20480,1228800
+            dd/mm/yyyy,hh:mm:ss.ssssss  -- 第一个点的时间
+            dd/mm/yyyy,hh:mm:ss.ssssss  -- 触发点的时间(这个可以做为尾部开始时间)
+                e.g. 28/6/2013,16:23:08.238000
+                     ,
+            ft  e.g. BINARY
+            Timemult    e.g. 1
+        </cfg_file_format>
+        <datafile_struct>
+            <标准结构>
+                struct InstRecordStd {
+                    unsigned long sn;           //序号
+                    unsigned long timestamp;    //时标
+                    short U[3]; //Voltage
+                    short I[3]; //Current
+                }
+            </标准结构>
+            <简化结构>
+                struct InstRecordCut {
+                    short U[3]; //Voltage
+                    short I[3]; //Current
+                }
+            </简化结构>
+        </datafile_struct>
+        <信息文件 ext=".inf">
+        	格式如下。暂升时 max_voltage为特征值(单位V), min_voltage为null.
+        	暂降或短时中断时反之。
+        	[Public Record_Information]
+			max_voltage=5000
+			min_voltage=null
+        </信息文件>
+    </ComTraDE>
+</manual>
+
+

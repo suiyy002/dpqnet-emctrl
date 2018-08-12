@@ -1,0 +1,45 @@
+===============================================================================
+配置文件(.cfg)事件扩展格式说明：
+===============================================================================
+An,ch_id,ph,ccbm,uu,a,b,skew,min,max,primary,secondary,PS
+    ch_id 有效取值：U(电压通道)，I(电流通道)
+    ph 取值：AN/BN/CN AB/BC/CA
+    ccbm: A1 -- 触发原因("VVar", "Man", "IStr", "ILmt", "VLmt", "Stdy")
+    	  A2 -- 事件类型("---", "Intr", "Dip", "Swell")
+    e.g. 1,U,AN,VVar,V,0.01,0,,-32000,32000,10000,100,S
+    	 2,U,BN,Swell,V,0.01,0,,-32000,32000,10000,100,S
+    	 3,U,CN,,V,0.01,0,,-32000,32000,10000,100,S
+    	 4,I,AN,,A,0.01,0,,-32000,32000,600,5,S
+    	 5,I,BN,,A,0.01,0,,-32000,32000,600,5,S
+    	 6,I,CN,,A,0.01,0,,-32000,32000,600,5,S
+
+事件原因说明
+    VVar : 电压突变; IStr : 启动电流; ILmt : 电流门限; VLmt : 电压门限; 
+    Stdy : 稳态指标超限
+
+事件类型说明：
+    --- : 未知; Intr : 短时中断; Dip : 暂降; Swell : 暂升
+
+===============================================================================
+信息文件(.inf)事件格式说明： 
+===============================================================================
+暂升时 max_voltage=特征幅值, min_voltage=null.
+暂降或短时中断时 max_voltage=null, min_voltage=特征幅值。
+trigger_deep = |特征幅值-额定电压|
+trigger_range = trigger_deep/额定电压 * 100
+trigger_duration = 持续时间(单位s)
+
+特征值与 trigger_deep 的单位与cfg文件一致
+
+e.g.
+[Public Record_Information]
+type=swell				//冀北
+max_voltage=48.699
+min_voltage=null
+phase=B					//冀北
+trigger_range=15.65		//冀北
+trigger_duration=0.3456	//冀北
+[StateGrid event_inf]
+trigger_deep=9.036
+trigger_range=15.65
+trigger_duration=0.3456
