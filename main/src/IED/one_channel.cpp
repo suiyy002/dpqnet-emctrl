@@ -1,14 +1,11 @@
-/*! \file sv_shmem.cpp
-    \brief .
-*/
-
-#include "soft_dsp.h"
-#include "prmconfig.h"
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
 #include <sys/time.h>
+
+#include "one_channel.h"
+#include "phy_dev.h"
 
 using namespace std;
 const static int kRvcIntrvl = 32;   //Rapid Voltage Change event detect interval. unit:sample point number
@@ -19,7 +16,6 @@ const static int kSmpFreq = (kHrmSmpNum+5)/10;  //sample frequency. unit:number/
 OneChannel::OneChannel()
 {
     memset(&chnnl_attr_, 0, sizeof(chnnl_attr_));
-    memset(&frq_par_, 0, sizeof(frq_par_));
     memset(&meas_par3s_, 0, sizeof(meas_par3s_));
     
     for (int i=0; i<3; i++) {
@@ -100,97 +96,44 @@ void OneChannel::MeasureFreq(int cnt10, long tm)
 }
 
 /*!
-statistic frequecy
+Frequency statistics
 
     Input:  cnt10 -- number of sample point in 10cycle
             tm -- time of start point
 */
 void OneChannel::StatisFreq()
 {
+    int n = phy_dev().stts_spc(kPQParaFreq);
+    if (frq_par_.space!=n) {
+        frq_par_.tmist->set_interval(n);
+        frq_par_.space = n;
+        n /= frq_par_.frqmspc*20;
+        if (frq_par_.datast) delete frq_par_.datast;
+        frq_par_.datast = new DataStatis<int>(n, CompareInt);
+    }
     frq_par_.datast->SetData(frq_par_.freq, frq_par_.freq*frq_par_.freq);
-    int n = frqp->tmist->TimeOut(frqp->frq_val.time);
+    n = frqp->tmist->TimeOut(frqp->frq_val.time);
     if (n==0) return;
     if (n==1) {
         frqp->datast->GetData(frqp->frq_val.freqst);
         frqp->frq_val.freqst_up = 1;
         frqp->frq_val.timest = frqp->frq_val.time;
     }
-
-    n = chnnl_attr_.stts_spc[kPQParaFreq] /(frq_par_.frqmspc*20);
-    if (frq_par_.sz95!=n) {
-        if (frq_par_.datast) delete frq_par_.datast;
-        frq_par_.datast = new DataStatis<int>(n, CompareInt);
-        frq_par_.sz95 = n;
-    }
-    n = chnnl_attr_.stts_spc[kPQParaFreq];
-    if (frq_par_.space!=n) {
-        frq_par_.tmist->set_interval(n);
-        frq_par_.space = n;
-    }
     frqp->datast->IniData();
 }
 
 /*!
-statistic frequecy
+Measure data statistics
 
-    Input:  cnt10 -- number of sample point in 10cycle
-            tm -- time of start point
+    Input:  tm -- current 3s data time
 */
-void OneChannel::StatisRms()
+void OneChannel::StatisData(time_t tm)
 {
-    frq_par_.datast->SetData(frq_par_.freq, frq_par_.freq*frq_par_.freq);
-    int n = frqp->tmist->TimeOut(frqp->frq_val.time);
-    if (n==0) return;
-    if (n==1) {
-        frqp->datast->GetData(frqp->frq_val.freqst);
-        frqp->frq_val.freqst_up = 1;
-        frqp->frq_val.timest = frqp->frq_val.time;
-    }
+    StatisRms(tm);
+    StatisParam * frqp = &frq_par_;
+    int up = 0;
 
-    n = chnnl_attr_.stts_spc[kPQParaFreq] /(frq_par_.frqmspc*20);
-    if (frq_par_.sz95!=n) {
-        if (frq_par_.datast) delete frq_par_.datast;
-        frq_par_.datast = new DataStatis<int>(n, CompareInt);
-        frq_par_.sz95 = n;
-    }
-    n = chnnl_attr_.stts_spc[kPQParaFreq];
-    if (frq_par_.space!=n) {
-        frq_par_.tmist->set_interval(n);
-        frq_par_.space = n;
-    }
-    frqp->datast->IniData();
-}
-
-/*!
-Measure 3s interval value
-
-    Input:  ssrc -- resample value in 10cycles
-            scnt -- count of ssrc
-            tmv -- timestamp of 1st sample point in 10cycles
-            hsrc -- harmonic value
-            hcnt -- count of hsrc
-*/
-void OneChannel::MeasureData3s(int (*ssrc)[3][kHrmSmpNum], int scnt, timeval *tmv, 
-                               int (*hsrc)[3][640*2], int hcnt)
-{
-    MeasureRms(ssrc, scnt);
-    PostFft(hsrc, hcnt);
-
-    meas_par3s_.cnt++;
-    int cnt = ++meas_par3s_.cnt;
-    if (cnt < 15) return;
-    for (int i=0; i<3; i++) {
-        meas_par3s_.val.rmsn2[i] = meas_par3s_.sum_rmsn2[i] / cnt;
-        meas_par3s_.val.u_devn2[i][0] = meas_par3s_.sum_u_devn2[i][0] / cnt;
-        meas_par3s_.val.u_devn2[i][1] = meas_par3s_.sum_u_devn2[i][1] / cnt;
-        for (int j=0; j<640; j++) {
-            meas_par3s_.val.harm[i][j] = meas_par3s_.sum_harm[i][j] / cnt;
-        }
-        meas_par3s_.val.seq[i] = meas_par3s_.sum_seq[i] / cnt;
-    }
-    memset(&meas_par3s_.cnt, 0, sizeof(meas_par3s_)-sizeof(meas_par3s_.val));
-
-            int n = frqp->tmi->TimeOut(tm);
+        int n = frqp->tmi->TimeOut(tm);
         if (n==1) {
             up = 1;
         } else if (n==2) {
@@ -198,7 +141,263 @@ void OneChannel::MeasureData3s(int (*ssrc)[3][kHrmSmpNum], int scnt, timeval *tm
             frqp->freq_cnt = 0;
         }
 
+    if (up) {
+        float fi = frqp->freq_cnt;
+}
+
+/*!
+Rms & voltage deviation statistics
+
+    Input:  tm -- current 3s data time
+*/
+void OneChannel::StatisRms(time_t tm)
+{
+    int n = phy_dev().stts_spc(kPQParaUdev);
+    if (sta_rms_.space!=n) {
+        sta_rms_.space = n;
+        sta_rms_.tmi->set_interval(n);
+        n /= 3*20;
+        for (int i=0; i<3; i++) {
+            if (sta_rms_.rms_st[i]) delete sta_rms_.rms_st[i];
+            sta_rms_.rms_st[i] = new DataStatis<float>(n, CompareFloat);
+            for (int j=0; j<2; j++) {
+                if (sta_rms_.udev_st[i][j]) delete sta_rms_.udev_st[i][j];
+                sta_rms_.udev_st[i][j] = new DataStatis<float>(n, CompareFloat);
+            }
+        }
+    }
+    for (int i=0; i<3; i++) {
+        sta_rms_.rms_st->SetData(meas_par3s_.val.rmsn2[i]);
+        for (int j=0; j<2; j++) {
+            sta_rms_.udev_st->SetData(meas_par3s_.val.u_devn2[i][j]);
+        }
+    }
+    n = sta_rms_.tmi->TimeOut(tm);
+    if (n==0) return;
+    if (n==1) {
+        for (int i=0; i<3; i++) {
+            sta_rms_.rms_st[i]->GetData(sta_rms_.val.rmsn2[i]);
+            for (int j=0; j<2; j++) {
+                sta_rms_.udev_st[i][j]->GetData(sta_rms_.val.u_devn2[i][j]);
+            }
+        }
+        sta_rms_.val.update = 1;
+        sta_rms_.val.time = tm;
+    }
+    for (int i=0; i<3; i++) {
+        sta_rms_.rms_st[i]->IniData();
+        for (int j=0; j<2; j++) {
+            sta_rms_.udev_st[i][j]->IniData();
+        }
+    }
+}
+
+/*!
+Harmonic statistics
+
+    Input:  tm -- current 3s data time
+*/
+void OneChannel::StatisHarm(time_t tm)
+{
+    int n = phy_dev().stts_spc(kPQParaHrm);
+    if (sta_hrm_.space!=n) {
+        sta_hrm_.space = n;
+        sta_hrm_.tmi->set_interval(n);
+        n /= 3*20;
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<51; j++) {
+                if (sta_hrm_.real[i][j]) {
+                    delete sta_hrm_.real[i][j];
+                    delete sta_hrm_.image[i][j];
+                }
+                sta_hrm_.real[i][j] = new DataStatis<float>(n, CompareFloat);
+                sta_hrm_.image[i][j] = new DataStatis<float>(n, CompareFloat);
+            }
+        }
+    }
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<51; j++) {
+            sta_hrm_.real[i][j]->SetData(meas_par3s_.harm3s[i][j].real);
+            sta_hrm_.image[i][j]->SetData(meas_par3s_.harm3s[i][j].image);
+        }
+    }
+    n = sta_hrm_.tmi->TimeOut(tm);
+    if (n==0) return;
+    if (n==1) {
+        float ftmp[2][4];
+        for (int i=0; i<3; i++) {
+            for (int j=0; j<51; j++) {
+                sta_hrm_.real[i][j]->GetData(ftmp[0]);
+                sta_hrm_.image[i][j]->GetData(ftmp[1]);
+                for (int k=0; k<4; k++) {
+                    sta_hrm_.val.harm[i][j][k].real = ftmp[0][k];
+                    sta_hrm_.val.harm[i][j][k].image = ftmp[1][k];
+                }
+            }
+        }
+        sta_hrm_.val.update = 1;
+        sta_hrm_.val.time = tm;
+    }
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            sta_hrm_.real[i][j]->IniData();
+            sta_hrm_.image[i][j]->IniData();
+        }
+    }
+}
+/*!
+Measure 3s interval value
+
+    Input:  ssrc -- resample value in 10cycles
+            scnt -- count of ssrc
+            tm -- timestamp of 1st sample point in 10cycles
+            hsrc -- [0-2]:PhaseA-C; 2n=real, 2n+1=image
+*/
+void OneChannel::MeasureData3s(int (*ssrc)[3][kHrmSmpNum], int scnt, time_t tm, int (*hsrc)[3][640*2])
+{
+    MeasureRms(ssrc, scnt);
+    PostFft(hsrc);
+    CComplexNum fund[3]; //fundamental component
+    for (int i=0; i<3; i++) {
+        fund[i].real = hsrc[i][0];
+        fund[i].image = hsrc[i][1];
+    }
+    MeasureSeq(fund);
     
+    int cnt = ++meas_par3s_.cnt;
+    if (cnt < 15) return;
+    for (int i=0; i<3; i++) {
+        meas_par3s_.val.rmsn2[i] = meas_par3s_.sum_rmsn2[i] / cnt;
+        meas_par3s_.val.u_devn2[i][0] = meas_par3s_.sum_u_devn2[i][0] / cnt;
+        meas_par3s_.val.u_devn2[i][1] = meas_par3s_.sum_u_devn2[i][1] / cnt;
+        meas_par3s_.val.seq[i] = meas_par3s_.sum_seq[i] / cnt;
+        for (int j=0; j<640; j++) {
+            meas_par3s_.harm3s[i][j] = meas_par3s_.sum_harm[i][j] / cnt;
+        }
+    }
+    MeasureHarm(&meas_par3s_);
+    meas_par3s_.val.time = tm;
+    meas_par3s_.update = 1;
+    memset(&meas_par3s_.cnt, 0, sizeof(meas_par3s_)-sizeof(meas_par3s_.val));
+
+    StatisData(tm);
+}
+
+/*!
+Measure harmonic 3s value
+
+    Input:  par3s -- &meas_par3s_;
+*/
+void OneChannel::MeasureHarm(MeasParam3s * par3s)
+{
+    int i, j;
+    for (i=0; i<3; i++) {   //DC & fundmental component
+        for (j=0; j<2; j++) {
+            par3s->val.ihrm[i][j] = par3s->harm3s[i][j*10];
+        }
+    }        
+    int type = phy_dev().hrm_type();
+    if (type==1) {          //Component
+        for (i=0; i<3; i++) {
+            for (j=2; j<51; j++) {
+                par3s->val.harm[i][j] = par3s->harm3s[i][j*10];
+            }
+        }        
+    } else if (type==2) {   //Group
+        CComplexNum cmxi, cmxj={0, 0};
+        for (i=0; i<3; i++) {
+            for (j=1; j<50; j++) {
+                cmxi = par3s->harm3s[i][j*10+5];
+                cmxi.real /= 2; cmxi.image /= 2;
+                cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                for (int k=0; k<9; k++) {
+                    cmxi = par3s->harm3s[i][j*10+5+k];
+                    cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                }
+                cmxi = par3s->harm3s[i][j*10+15];
+                cmxi.real /= 2; cmxi.image /= 2;
+                cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                par3s->val.harm[i][j] = cmxj;
+            }
+        }
+    } else {                //Subgroup
+        CComplexNum cmxi, cmxj={0, 0};
+        for (i=0; i<3; i++) {
+            for (j=1; j<50; j++) {
+                for (int k=0; k<3; k++) {
+                    cmxi = par3s->harm3s[i][j*10+9+k];
+                    cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                }
+                par3s->val.harm[i][j] = cmxj;
+            }
+        }
+    }
+    if (chl_type()==1) { //voltage harmonic ratio
+        for (i=0; i<3; i++) {
+            float f1 = par3s->val.harm[i][1].real + par3s->val.harm[i][1].image;
+            float fthd = 0, fodd = 0;
+            for (j=2; j<51; j++) {
+                CComplexNum cmxh = par3s->val.harm[i][j];
+                float fi = cmxh.real + cmxh.image;
+                par3s->val.hr[i][j] = sqrt(fi/f1)*100;
+                fthd += fi/f1;
+                if (j%2) fodd += fi/f1;
+            }
+            par3s->val.thd[i] = sqrt(fthd)*100;
+            par3s->val.thdodd[i] = sqrt(fodd)*100;
+            par3s->val.thdevn[i] = sqrt(fthd-fodd)*100;
+        }
+    }
+    MeasureInterHarm(par3s);
+}
+
+/*!
+Measure interharmonic 3s value
+
+    Input:  par3s -- &meas_par3s_;
+*/
+void OneChannel::MeasureInterHarm(MeasParam3s * par3s)
+{
+    int i, j;
+    int type = phy_dev().ihrm_type();
+    if (type==1) {          //Group
+        CComplexNum cmxi, cmxj={0, 0};
+        for (i=0; i<3; i++) {
+            for (j=0; j<51; j++) {
+                for (int k=1; k<9; k++) {
+                    cmxi = par3s->harm3s[i][j*10+k];
+                    cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                }
+                par3s->val.harm[i][j] = cmxj;
+            }
+        }
+    } else if (type==2) {   //1/2
+        for (i=0; i<3; i++) {
+            for (j=0; j<51; j++) {
+                par3s->val.harm[i][j] = par3s->harm3s[i][j*10+5];
+            }
+        }        
+    } else {                //Subgroup
+        CComplexNum cmxi, cmxj={0, 0};
+        for (i=0; i<3; i++) {
+            for (j=0; j<51; j++) {
+                for (int k=2; k<8; k++) {
+                    cmxi = par3s->harm3s[i][j*10+k];
+                    cmxj.real += cmxi.real; cmxj.image += cmxi.image;
+                }
+                par3s->val.harm[i][j] = cmxj;
+            }
+        }
+    }
+    if (chl_type()==1) { //voltage interharmonic ratio
+        for (i=0; i<3; i++) {
+            float f1 = par3s->val.harm[i][1].real + par3s->val.harm[i][1].image;
+            for (j=2; j<51; j++) {
+                CComplexNum cmxh = par3s->val.ihrm[i][j];
+                par3s->val.ihr[i][j] = sqrt((cmxh.real + cmxh.image)/f1)*100;
+            }
+        }
+    }
 }
 
 /*!
@@ -206,9 +405,8 @@ Measure Root mean square
 
     Input:  src -- resample value in 10cycles
             cnt -- count input value
-            tmv -- timestamp of 1st sample point in 10cycles
 */
-void OneChannel::MeasureRms(int (*src)[3][kHrmSmpNum], int cnt, timeval *tmv, harm, hmcnt)
+void OneChannel::MeasureRms(int (*src)[3][kHrmSmpNum], int cnt)
 {
     MeasParam3s * p3s = &meas_par3s_;
     float fi, sums10;   //sum of squares in 10cycles
@@ -220,23 +418,20 @@ void OneChannel::MeasureRms(int (*src)[3][kHrmSmpNum], int cnt, timeval *tmv, ha
             sums10 += fi;
         }
         sums10 /= cnt;
-        p3s->rmsn2[i] = sums10;
+        p3s->sum_rmsn2[i] += sums10;
         //voltage deviation
         if (chnnl_attr_.type==1) { //be voltage channel
             fi = chnl_par_.trns_rto[0];   //din -- declare input. unit:0.1V or 0.1A
             fi *= fi;
             if (sums10>fi) {
-                p3s->u_devn2[i][1] = sums10;
-                p3s->u_devn2[i][0] = fi;
+                p3s->sum_u_devn2[i][1] += sums10;
+                p3s->sum_u_devn2[i][0] += fi;
             } else {
-                p3s->u_devn2[i][0] = sums10;
-                p3s->u_devn2[i][1] = fi;
+                p3s->sum_u_devn2[i][0] += sums10;
+                p3s->sum_u_devn2[i][1] += fi;
             }
         }
     }
-    p3s->cnt++;
-
-    memcpy(&meas_val_.time, time, sizeof(timeval));
 }
 
 /*!
@@ -245,40 +440,38 @@ Description: fft post-processing
     Input:  src -- fft result value. 2n=real, 2n+1=image
             cnt -- count input value per phase. 
 */
-void OneChannel::PostFft(int (*src)[3][640*2], int cnt)
+void OneChannel::PostFft(int (*src)[3][640*2])
 {
-    float fi;
+    MeasParam3s * p3s = &meas_par3s_;
     for (int i=0; i<3; i++) {
         int *p = src[i];
-        CComplexNum *p_harm = meas_par3s_.val.harm[i];
-        for ( int j = 0; j < cnt; j++ ) {
-            p_harm->real = *p++;
-            p_harm->image = *p++;
+        CComplexNum *p_harm = meas_par3s_.sum_harm[i];
+        for ( int j = 0; j < 640; j++ ) {
+            p_harm->real += *p++;
+            p_harm->image += *p++;
             p_harm++;
         }
     }
-    MeasureSeq();
 }
 
 /*!
 Measure sequence component
+
+    Input:  fund -- fundamental component
 */
-void OneChannel::MeasureSeq()
+void OneChannel::MeasureSeq(CComplexNum * fund)
 {
-    CComplexNum fndhrm[3];
-    for (int i=0; i<3; i++) {
-        memcpy(&fndhrm[i], &meas_val_.harm[i][10], sizeof(CComplexNum));
-    }
+    float * seq = meas_par3s_.seq;
     
-    meas_val_.seq[0] = VectorsSum(fndhrm, 3) / 3;
+    seq[0] += VectorsSum(fund, 3) / 3;
     
-    RotateVec(&fndhrm[1], 0);
-    RotateVec(&fndhrm[2], 1);
-    meas_val_.seq[1] = VectorsSum(fndhrm, 3) / 3;
+    RotateVec(&fund[1], 0);
+    RotateVec(&fund[2], 1);
+    seq[1] += VectorsSum(fund, 3) / 3;
     
-    RotateVec(&fndhrm[1], 0);
-    RotateVec(&fndhrm[2], 1);
-    meas_val_.seq[2] = VectorsSum(fndhrm, 3) / 3;
+    RotateVec(&fund[1], 0);
+    RotateVec(&fund[2], 1);
+    seq[2] += VectorsSum(fund, 3) / 3;
 }
 
 /*!

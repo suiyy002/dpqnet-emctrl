@@ -1,3 +1,7 @@
+/*! \file shmem_sv.h
+    \brief Share memory class for 61850 SV.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _SHMEM_SV_H_
 #define _SHMEM_SV_H_
 #include "share_mem.h"

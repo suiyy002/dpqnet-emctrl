@@ -191,7 +191,7 @@ int ParamCfg::ReadChnlParam(OneChannel *chl, int idx)
                 //for old version upgrade
                 //create = true;
             }
-            chl->set_chnnl_para(&chl_pr);
+            chl->set_parm_chnl(&chl_pr);
         } else {
             chl->DefaultPara(&chl_pr);
             create = true;

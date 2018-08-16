@@ -1,3 +1,7 @@
+/*! \file param_chnl.h
+    \brief OneChannel parameter.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _PARAM_CHNL_H_
 #define _PARAM_CHNL_H_
 

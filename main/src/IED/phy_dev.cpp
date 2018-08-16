@@ -1,8 +1,3 @@
-/*! \file sv_shmem.cpp
-    \brief .
-*/
-
-#include "soft_dsp.h"
 #include "prmconfig.h"
 #include <cstdio>
 #include <cstring>

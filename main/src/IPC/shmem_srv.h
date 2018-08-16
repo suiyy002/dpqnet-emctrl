@@ -1,3 +1,7 @@
+/*! \file shmem_srv.h
+    \brief Share memory class for 61850 server.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _SHMEM_SRV_H_
 #define _SHMEM_SRV_H_
 #include "share_mem.h"

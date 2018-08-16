@@ -1,3 +1,7 @@
+/*! \file param_ld.h
+    \brief Logical device parameter.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _PARAM_LD_H_
 #define _PARAM_LD_H_
 

@@ -1,3 +1,7 @@
+/*! \file pqnet_ied.h
+    \brief PQNet IED -- Intelligent Electronic Device.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _PQNET_IED_H_
 #define _PQNET_IED_H_
 #include <cstdio>

@@ -1,5 +1,5 @@
 /*! \file shmem_srv61850.h
-    \brief share memory for 61850 server.
+    \brief Share memory for 61850 server.
     Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
 */
 #ifndef _SHMEM_SRV61850_H_
@@ -197,18 +197,18 @@ typedef struct {
     float hppv[3][50];  //harmonic voltage rms for phase to phase. [0-2]:AB-CA, [0-49]:1-50
     float hvang[3][50]; //harmonic voltage angle. [0-2]:A-C, [0-49]:1-50. real only
     //HR
-    float hrphv[3][49]; //harmonic ratio for phase to neutral. [0-2]:A-C, [0-48]:2-50
-    float hrppv[3][49]; //harmonic ratio for phase to phase. [0-2]:AB-CA, [0-48]:2-50
+    float hrphv[3][49]; //harmonic ratio for phase to neutral. [0-2]:A-C, [0-48]:2-50. unit:%
+    float hrppv[3][49]; //harmonic ratio for phase to phase. [0-2]:AB-CA, [0-48]:2-50. unit:%
     //THD
-    float thda[3];      //current THD. [0-2]:A-C
-    float thdodda[3];   //current odd THD. [0-2]:A-C
-    float thdevna[3];   //current even THD. [0-2]:A-C
-    float thdphv[3];    //voltage THD for phase to neutral. [0-2]:A-C
-    float thdoddphv[3]; //voltage odd THD for phase to neutral. [0-2]:A-C
-    float thdevnphv[3]; //voltage even THD for phase to neutral. [0-2]:A-C
-    float thdppv[3];    //voltage THD for phase to phase. [0-2]:AB-CA
-    float thdoddppv[3]; //voltage odd THD for phase to phase. [0-2]:AB-CA
-    float thdevnppv[3]; //voltage even THD for phase to phase. [0-2]:AB-CA
+    float thda[3];      //current THD. [0-2]:A-C. unit:%
+    float thdodda[3];   //current odd THD. [0-2]:A-C. unit:%
+    float thdevna[3];   //current even THD. [0-2]:A-C. unit:%
+    float thdphv[3];    //voltage THD for phase to neutral. [0-2]:A-C. unit:%
+    float thdoddphv[3]; //voltage odd THD for phase to neutral. [0-2]:A-C. unit:%
+    float thdevnphv[3]; //voltage even THD for phase to neutral. [0-2]:A-C. unit:%
+    float thdppv[3];    //voltage THD for phase to phase. [0-2]:AB-CA. unit:%
+    float thdoddppv[3]; //voltage odd THD for phase to phase. [0-2]:AB-CA. unit:%
+    float thdevnppv[3]; //voltage even THD for phase to phase. [0-2]:AB-CA. unit:%
     //Harmonic power
     float hw[4][50];    //[0-2]:A-C,all [0-49]:1-50
     float hvar[4][50];  //[0-2]:A-C,all [0-49]:1-50
@@ -227,8 +227,8 @@ typedef struct {
     float ha[3][50];    //interharmonic current rms.[0-2]:A-C, [0-49]:1-50
     float hphv[3][50];  //interharmonic voltage rms for phase to neutral. [0-2]:A-C, [0-49]:1-50
     float hppv[3][50];  //interharmonic voltage rms for phase to phase. [0-2]:A-C, [0-49]:1-50
-    float hrphv[3][50]; //interharmonic voltage HR for phase to neutral.[0-2]:A-C, [0-49]:0-49
-    float hrppv[3][50]; //interharmonic voltage HR for phase to phase.[0-2]:AB-CA, [0-49]:0-49
+    float hrphv[3][50]; //interharmonic voltage HR for phase to neutral.[0-2]:A-C, [0-49]:0-49. unit:%
+    float hrppv[3][50]; //interharmonic voltage HR for phase to phase.[0-2]:AB-CA, [0-49]:0-49. unit:%
     uint16_t q;
 } PqmMhaiIntr;
 

@@ -1,3 +1,7 @@
+/*! \file loop_buf_base.h
+    \brief Loop buffer base class.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _LOOP_BUF_BASE_H_
 #define _LOOP_BUF_BASE_H_
 

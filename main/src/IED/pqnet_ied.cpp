@@ -78,7 +78,6 @@ void PqnetIED::IniLDChnnl()
     ChnnlAttr ch_attr[kChannelTol];
     DeriveChnlAttr(ch_attr, ch_inf);
     for (int i = 0; i < kChannelTol; i++) {
-        ch_attr[i].stts_spc = phy_dev().stts_spc();
         one_channel_[i]->set_chnl_attr(&ch_attr[i]);
         param_cfg->ReadChnlParam(one_channel_[i], i+1);
         one_channel_[i]->set_frqmspc(phy_dev().freq_measpc());
@@ -276,10 +275,7 @@ void PqnetIED::HandleSV(int wait)
         int num = CallFPGA(fft_rbuf_, fft_tbuf, pst_rbuf_, pst_tbuf);
         if (rsmp) {
             for (int i=0; i<kChannelTol; i++) {
-                one_channel_[i]->MeasureData3s(rsmp->val[i], kHrmSmpNum, &rsmp->t1st[i],
-                                               fft_rbuf_[i], 640);
-                //one_channel_[i]->MeasureRms(rsmp->val[i], kHrmSmpNum, &rsmp->t1st[i]);
-                //one_channel_[i]->PostFft(fft_rbuf_[i], 640);
+                one_channel_[i]->MeasureData3s(rsmp->val[i], kHrmSmpNum, rsmp->t1st[i].tv_sec, fft_rbuf_[i]);
             }
             for (int i=0; i<kChannelTol; i++) {
                 if (logic_dev_[i]->stat()) {

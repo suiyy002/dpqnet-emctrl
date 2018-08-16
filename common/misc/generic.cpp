@@ -28,7 +28,7 @@ Compare two integer
     Input:  arg1,arg2 -- data be compared
     Return: -1=(arg1<arg2), 0=(arg1==arg2), 1=(arg1>arg2)
 */
-int CompareInt(const void *arg1, const void *arg2)
+inline int CompareInt(const void *arg1, const void *arg2)
 {
     int a = *(int*)arg1;
     int b = *(int*)arg2;

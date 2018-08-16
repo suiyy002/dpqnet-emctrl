@@ -1,3 +1,7 @@
+/*! \file sv_process.h
+    \brief SV--Sample Value process functions.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _SV_PROCESS_H_
 #define _SV_PROCESS_H_
 

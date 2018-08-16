@@ -1,3 +1,7 @@
+/*! \file rce_func.h
+    \brief Rapid Change Event functions.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _RCE_FUNC_H_
 #define _RCE_FUNC_H_
 

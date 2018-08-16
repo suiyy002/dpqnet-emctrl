@@ -1,10 +1,4 @@
-#include "volt_variation.h"
-#include "harmfunc.h"
-#include "other_func.h"
-#include "save_func.h"
-#include "../base_func/utility.h"
-#include "../GUI/form/mainform.h"
-#include "../ComTraDE/comtrade_func.h"
+#include "phy_dev.h"
 #include <cmath>
 #include <fcntl.h>
 #include <unistd.h>

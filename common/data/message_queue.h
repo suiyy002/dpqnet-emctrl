@@ -1,5 +1,5 @@
 /*! \file message_queue.h
-    \brief message queue.
+    \brief Message queue.
     Copyright (c) 2017  Xi'an Boyuu Electric, Inc.
 */
 #ifndef _MESSAGE_QUEUE_H_

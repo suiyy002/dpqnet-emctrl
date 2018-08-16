@@ -1,3 +1,7 @@
+/*! \file one_channel.h
+    \brief Single channel.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _ONE_CHANNEL_H_
 #define _ONE_CHANNEL_H_
 #include <cstdio>
@@ -5,46 +9,17 @@
 #include <cstring>
 
 #include "param_chnl.h"
+#include "param_phd.h"
 #include "pqm_data_types.h"
 #include "meas_para.h"
 
 static const int kHrmSmpNum = 2048; //sample data number for harmonic per 10 cycle(¡Ö0.2s)
-
-struct MeasureValue {
-    float freq;     //frequency 1s interval
-    uint8_t freq_up; //freq update. 1=update. 0=no
-    time_t freq_tm;  //freq update time.
-    
-    //below parameter is 10-cycle interval data
-    time_t time; //10-cycle data update time
-    float rmsn2[3]; //rms^2. square of rms. [0-2]:A-C
-    float u_devn2[2][3];    //u_dev^2. square of voltage deviation. [0-1]:Urms-under, Urms-over. [0-2]:A-C. unit:V^2
-    LoopBuffer<float> *rce_rmsn2[3];    //square of the rapid change event rms over 1 cycle, 
-                                        //and refreshed each kRvcIntrvl sample point. A-C.
-    CComplexNum harm[3][640];   //[0-2]:A-C. [0, 1/10-63_9/10]
-    float seq[3];     //sequence component. [0-2]:zero,positive,negative
-    
-};
-struct StatisValue {
-    float freq;     //frequency 1s interval
-    uint8_t freq_up; //freq update. 1=update. 0=no
-    time_t freq_tm;  //freq update time.
-    
-    //below parameter is 10-cycle interval data
-    time_t time; //10-cycle data update time
-    float rmsn2[3]; //rms^2. square of rms. [0-2]:A-C
-    float u_devn2[2][3];    //u_dev^2. square of voltage deviation. [0-1]:Urms-under, Urms-over. [0-2]:A-C. unit:V^2
-    CComplexNum harm[3][640];   //[0-2]:A-C. [0, 1/10-63_9/10]
-    float seq[3];     //sequence component. [0-2]:zero,positive,negative
-};
-
 
 struct ChnnlAttr {  //channel attribute
     uint8_t type;   //0=not used, 1=voltage, 2=current
     uint8_t mode;   //master or slave. 1=master, 0=slave
     uint8_t slaves; //number of slave.
     uint8_t slave_idx[kChannelTol-1];   //index of slave. 1=channel1,2=channel2...
-	const uint16_t *stts_spc;  //statistic space. unit:s. point to PhyDev::parm_phd_.stts_spc
 };
 
 struct RceInfo {
@@ -76,8 +51,8 @@ public:
     ~OneChannel();
     
     void MeasureFreq(int cnt10, timeval *tmv);
-    void MeasureRms(int (*src)[3][kHrmSmpNum], int cnt, timeval *tmv);
-    void PostFft(int *src, int cnt);
+    void MeasureData3s(int (*ssrc)[3][kHrmSmpNum], int scnt, time_t tm, int (*hsrc)[3][640*2]);
+    void HandleRce(float *rms, int rcnt, int32_t *src, int scnt, timeval stm, int phs);
     void ClearRce();
 
     //Accessors
@@ -111,31 +86,32 @@ public:
             case 2: frq_par_.frqmspc = 10; break;
         } 
         frq_par_.tmi->set_interval(frq_par_.frqmspc)};
-    void set_udevspc(uint8_t val) {};
     void set_parm_chnl(uint8_t *data) { memcpy(&parm_chnl_, data, sizeof(parm_chnl_)); };
     void set_smp_frq(uint32_t val) { smp_frq_ = val; };
 
 private:
-    void MeasureSeq();
-    void RotateVec(CComplexNum *c, int ang);
-    float SumVec3(const CComplexNum *c1, const CComplexNum *c2, const CComplexNum *c3);
+    void MeasureRms(int (*src)[3][kHrmSmpNum], int cnt);
+    void PostFft(int *src, int cnt);
+    void MeasureSeq(CComplexNum * fund);
     void DetectEvnt(float *rms, int rcnt, int phs, timeval stm);
     void GetRceLimit(float *high, float *low, float *intr, int type=0);
+    void MeasureHarm(MeasParam3s * par3s);
+    void MeasureInterHarm(MeasParam3s * par3s);
 
     ChnnlAttr chnnl_attr_;
     ParamChnl parm_chnl_;
+    const ParamPHD *prm_phd_;
     int prmchg_cnt_;    //parameter changed count
     uint8_t detect_type_;   //the channel type be detected
     int chl_match_; //channel type match error. i.e. the type be detected is not identical with the type be set.
                     //0=matched. 1=not match 
     FreqParam frq_par_;
     MeasParam3s meas_par3s_;
-    int smp_frq_;       //sampling frequency. unit:Hz
-    StatisValue statis_val_;
-    StatisValue statis_val_;
-    RmsStatis rms_statis_;
+    StatisRmsPar sta_rms_;
+    StatisHrmPar sta_hrm_;
     
     //rapid change event
+    int smp_frq_;       //sampling frequency. unit:Hz
     LoopBuffer<float> *rce_rmsn2_[3];   //square of the rapid change event rms over 1 cycle, 
                                         //and refreshed each kRvcIntrvl sample point. A-C.
     LoopPointer<int32_t> *rce_sv_[3];   //sample value for rce record wave.

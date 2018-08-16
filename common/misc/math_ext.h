@@ -1,3 +1,7 @@
+/*! \file math_ext.h
+    \brief Extended math function.
+    Copyright (c) 2017  Xi'an Boyuu Electric, Inc.
+*/
 #ifndef _MATH_EXT_H_
 #define _MATH_EXT_H_
 //---------------------------------------------------------------------------

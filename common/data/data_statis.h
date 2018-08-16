@@ -5,8 +5,6 @@
 #ifndef _DATA_STATIS_H_
 #define _DATA_STATIS_H_
 
-#include "loopbuf_sort.h"
-
 template <class T>
 class DataStatis
 {
@@ -15,6 +13,7 @@ public:
 	~DataStatis();
 
     void IniData();
+    void SetData(T val) { SetData(val, val); };
     void SetData(T val, float avg2);
     void GetData(T *val);
     
@@ -23,36 +22,42 @@ public:
 protected:
 
 private:
+    int (*compare_)(const void *, const void *);
+    void SetCp95buf(T *val);
+
     T data_[4];   //[0-3]:average, maximum, minimum, cp95
     float avg_tmp_; //temporary variable for calculate average
     int count_;     //used for calculate average
     bool cp95_en_;  //enable cp95 calculate. true=enable
-    LoopBufSort<T> *cal_cp95_;   //calculate cp95
+    T *cp95_buf_;   //buffer used to calculate cp95
+    int max_idx_;
 };
 
 template <class T>
 DataStatis<T>::DataStatis(int size, int (*compfunc)(const void *, const void *))
 {
-    cal_cp95_ = new LoopBufSort<T>(size, compfunc, NULL);
+    compare_ = compfunc;
+    cp95_buf_ = new T[size+1];
     cp95_en_ = false;
+    max_idx_ = size;
     IniData();
 }
 
 template <class T>
 DataStatis<T>::~DataStatis()
 {
-    delete cal_cp95_;
+    delete [] cp95_buf_;
 }
 
 template <class T>
 void DataStatis<T>::IniData()
 {
-    count_ = 0;
     memset(data_, 0, sizeof(data_));
+    memset(&data_[2], 0x7f, sizeof(T));
+    count_ = 0;
     avg_tmp_ = 0;
     
-    memset(&data_[2], 0x7f, sizeof(T));    
-    cal_cp95_->Clear();
+    memset(cp95_buf_, 0, sizeof(cp95_buf_));
 }
 
 /*!
@@ -65,7 +70,7 @@ void DataStatis<T>::SetData(T val, float avg2)
     avg_tmp_ += avg2;
     if (val>data_[1]) data_[1] = val;
     if (val<data_[2]) data_[2] = val;
-    if (cp95_en_) cal_cp95_->InsertMax(&val);
+    if (cp95_en_) SetCp95buf(&val);
     count_++;
 };
 
@@ -75,18 +80,36 @@ void DataStatis<T>::SetData(T val, float avg2)
 template <class T>
 void DataStatis<T>::GetData(T *val)
 {
-    printf("avg_tmp_=%6.3f, count_=%d\n", avg_tmp_, count_);
+    //printf("avg_tmp_=%6.3f, count_=%d\n", avg_tmp_, count_);
     data_[0] = avg_tmp_/count_;
-    cal_cp95_->Seek(0); 
     if (cp95_en_) {
-        cal_cp95_->Read(&data_[3]);
+        data_[3] = cp95_buf_[0];
     } else {
         float frand = rand();
-        printf("???\n");
         frand /= RAND_MAX;
         data_[3] = data_[0] + (data_[1]-data_[0])*frand;
     }
     memcpy(val, data_, sizeof(T)*4);
+}
+
+template <class T>
+void DataStatis<T>::SetCp95buf(T *val)
+{
+    int k = compare_(val, &cp95_buf_[0]);
+    if (k<=0) return;
+    k = compare_(val, &cp95_buf_[max_idx_]);
+    if (k>=0) {
+        memcpy(cp95_buf_, &cp95_buf_[1], sizeof(T)*max_idx_);
+        cp95_buf_[max_idx_] = *val;
+    } else {
+        for (int i=1; i<max_idx_; i++) {
+            k = compare_(val, &cp95_buf_[i]);
+            if (k<=0) {
+                memcpy(cp95_buf_, &cp95_buf_[1], sizeof(T)*(i-1));
+                cp95_buf_[i-1] = *val;
+            }
+        }
+    }
 }
 
 #endif // _DATA_STATIS_H_ 

@@ -1,5 +1,6 @@
 /*! \file time_interval.h
     \brief time interval.
+    Copyright (c) 2018  Xi'an Boyuu Electric, Inc.
 */
 #ifndef _TIME_INTERVAL_H_
 #define _TIME_INTERVAL_H_
